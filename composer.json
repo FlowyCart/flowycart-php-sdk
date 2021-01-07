@@ -1,0 +1,23 @@
+{
+    "name": "flowycart/flowycart-php-sdk",
+    "description": "Flowycart PHP library",
+    "keywords": [
+        "flowycart",
+        "checkout processing",
+        "api"
+    ],
+    "homepage": "https://flowycart.com",
+    "type": "library",
+    "license": "MIT",
+    "minimum-stability": "stable",
+    "require": {
+        "php": ">=5.4.0",
+        "ext-curl": "*",
+        "ext-json": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Flowycart\\" : "lib/"
+        }
+    }
+}
