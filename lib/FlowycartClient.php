@@ -87,9 +87,10 @@ class FlowycartClient
     /**
      * Sends a createOrder request to Flowycart's API
      *
-     * The function takes a single argument, it must be a key-value array in correspondence with the OrderInputType
+     * @param array $params OrderInputType params. It must be a key-value array in correspondence with the OrderInputType
      * fields:
      *
+     *<code>
      * - refId (string): vendor order id
      * - items (array): items or products that conform the order. Each item (ItemInputType) could have the following
      * values:
@@ -107,7 +108,7 @@ class FlowycartClient
      *      you select "PERCENT" the taxRate value will be taken as the percent tax to apply to the item cost.
      *      Otherwise, if you select "PRICE" the taxRate value will be taken as a fixed amount to apply as tax.
      * - currency (string): currency code in which the payment will be made.
-     * - currencyValue (null|float): value of the currency. (TODO: CHECK THE MEANING OF THIS VALUE)
+     * - currencyValue (null|float): value of the currency. This value has as reference the e-comerce default currency
      * - successUrl (string): url to redirect the user when the payment process is completed.
      * - cancelUrl (string): url to redirect the user when the payment process is canceled.
      * - customerId (null|string): Flowycart customer id who made the order.
@@ -115,20 +116,30 @@ class FlowycartClient
      * must have the following values:
      *      - key (string): variant key
      *      - value (null|string): variant value
+     *</code>
      *
-     * @param array $params
-     * @return array the created order data ['id' => <createdOrderId>]
+     * @param null|array $extraReturnFields the fields the user wants to get from the created order
+     *
+     * @return array $extraReturnFields the created customer data (CustomerType) selected fields. By default the field
+     * id will be returned. E.g <code>['id' => <id>, ...]</code>
+     *
      * @throws ErrorException
      */
-    public function createOrder($params){
-        $mutation = '
-             mutation createOrder($orderInput: OrderInputType!){
-               createOrder(order: $orderInput){
+    public function createOrder($params, $extraReturnFields = []){
+        $defaultReturnFields = ['id'];
+        $returnFields = join(' ', array_merge($defaultReturnFields, $extraReturnFields));
+
+        $mutation = "
+             mutation createOrder(\$orderInput: OrderInputType!){
+               createOrder(order: \$orderInput){
                  id
                  status
+                 order{
+                    {$returnFields}
+                 }
                }
              }        
-        ';
+        ";
 
         $variables = ['orderInput' => $params];
 
@@ -137,17 +148,17 @@ class FlowycartClient
         if ($responseData->createOrder->id === null)
             throw new ErrorException($responseData->createOrder->status);
 
-        return ['id' => $responseData->createOrder->id];
+        return (array) $responseData->createOrder->order;
     }
-
 
     /**
      *
      * Sends a createCustomer request to Flowycart's API
      *
-     * The function takes a single argument, it must be a key-value array in correspondence with the CustomerInputType
-     * fields:
+     * @param array $params CustomerInputType params. It must be a key-value array in correspondence with the
+     * CustomerInputType fields:
      *
+     * <code>
      * - refId (string): vendor customer id
      * - firstName (null|string): customer first name
      * - lastName (null|string): customer lastName
@@ -155,8 +166,8 @@ class FlowycartClient
      * - addresses (null|array): customer addresses. Each item (AddressInputType) in the array can have the following values:
      *      - id (null|string): address id, if not set a new address will be created, otherwise the address with the
      *      specified id will be updated
-     *      - firstName (string): TODO
-     *      - lastname (string): TODO
+     *      - firstName (null|string): firstname of the person who belongs the address
+     *      - lastname (null|string): lastname of the person who belongs the address
      *      - line1 (string): address line 1
      *      - line2 (null|string): address line 2
      *      - zip (string): address zip code
@@ -168,22 +179,29 @@ class FlowycartClient
      *      following fields:
      *          - id (string): id of the zone in Flowycart.
      *      - city (null|string): address city.
+     * </code>
      *
-     * @param $params
-     * @return array the created customer data ['id' => <createdCustomerId>]
+     * @param null|array $extraReturnFields the extra fields the user wants to get from the created customer
+     *
+     * @return array $extraReturnFields the created customer data (CustomerType) selected fields. By default the field
+     * id will be returned. E.g <code>['id' => <id>, ...]</code>
+     *
      * @throws ErrorException
      */
-    public function createCustomer($params){
-        $mutation = '
-            mutation createCustomer($customerInput: CustomerInputType!){
-              createCustomer(customer: $customerInput){
+    public function createCustomer($params, $extraReturnFields = []){
+        $defaultReturnFields = ['id'];
+        $returnFields = join(' ', array_merge($defaultReturnFields, $extraReturnFields));
+
+        $mutation = "
+            mutation createCustomer(\$customerInput: CustomerInputType!){
+              createCustomer(customer: \$customerInput){
                 customer{
-                  id
+                  {$returnFields}
                 }
                 status
               }
             }
-        ';
+        ";
 
         $variables = ['customerInput' => $params];
 
@@ -192,7 +210,7 @@ class FlowycartClient
         if ($responseData->createCustomer->customer === null)
             throw new ErrorException($responseData->createCustomer->status);
 
-        return ['id' => $responseData->createCustomer->customer->id];
+        return (array) $responseData->createCustomer->customer;
     }
 
     /**
