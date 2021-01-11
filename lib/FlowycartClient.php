@@ -91,7 +91,7 @@ class FlowycartClient
      * fields:
      *
      *<code>
-     * - refId (string): vendor order id
+     * - refId (null|string): vendor order id
      * - items (array): items or products that conform the order. Each item (ItemInputType) could have the following
      * values:
      *      - name (string): item name.
@@ -120,7 +120,7 @@ class FlowycartClient
      *
      * @param null|array $extraReturnFields the fields the user wants to get from the created order
      *
-     * @return array $extraReturnFields the created customer data (CustomerType) selected fields. By default the field
+     * @return array the created customer data (CustomerType) selected fields. By default the field
      * id will be returned. E.g <code>['id' => <id>, ...]</code>
      *
      * @throws ErrorException
@@ -183,7 +183,7 @@ class FlowycartClient
      *
      * @param null|array $extraReturnFields the extra fields the user wants to get from the created customer
      *
-     * @return array $extraReturnFields the created customer data (CustomerType) selected fields. By default the field
+     * @return array the created customer data (CustomerType) selected fields. By default the field
      * id will be returned. E.g <code>['id' => <id>, ...]</code>
      *
      * @throws ErrorException
@@ -211,6 +211,38 @@ class FlowycartClient
             throw new ErrorException($responseData->createCustomer->status);
 
         return (array) $responseData->createCustomer->customer;
+    }
+
+
+    /**
+     *
+     * Sends a connectMerchant request to Flowycart's API. This endpoint will return a token that will be useb by the
+     * e-comerce to validate the callback requests from Flowycart.
+     *
+     * @param string $baseUrl the base url of the callbacks endpoints on the e-comerce side
+     * @param string $vendor the name of the e-comerce. E.g. Opencart, Magento, etc.
+     *
+     * @return array an array containing the generated token: ['token' => '<tokenStr>']
+     *
+     * @throws ErrorException
+     */
+    public function connectMerchant($baseUrl, $vendor){
+        $mutation = '
+            mutation connectMerchant($baseUrl:String!, $vendor:String!){
+              connectMerchant(baseUrl:$baseUrl, vendor:$vendor){
+                status
+                token
+              }
+            }
+        ';
+
+        $variables = compact('baseUrl', 'vendor');
+        $responseData = $this->graphQLRequest($mutation, $variables);
+
+        if ($responseData->connectMerchant->token == null)
+            throw new ErrorException($responseData->connectMerchant->status);
+
+        return ['token' => $responseData->connectMerchant->token];
     }
 
     /**
