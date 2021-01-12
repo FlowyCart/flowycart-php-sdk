@@ -92,11 +92,13 @@ class FlowycartClient
      *
      *<code>
      * - refId (null|string): vendor order id
+     * - intent (boolean): flag that indicates if the order is an order that is about to pass through the checkout
+     * process or not
      * - items (array): items or products that conform the order. Each item (ItemInputType) could have the following
      * values:
      *      - name (string): item name.
      *      - description (null|string): item description
-     *      - images (null|string): json containing the list of the images of the product
+     *      - images (null|string): array containing the list of the images of the product
      *      - amount (null|float): item price
      *      - quantity (null|int): item quantity
      *      - variant (null|array): variants or options of the item. Each variant (ItemVariantInputType) must have the
@@ -285,7 +287,7 @@ class FlowycartClient
      * @throws ErrorException
      */
     private function handleGraphQLErrors(array $errors){
-        $message = array_unshift($errors)->message;
+        $message = array_shift($errors)->message;
         foreach ($errors as $error){
             $message .= "\n{$error->message}";
         }
