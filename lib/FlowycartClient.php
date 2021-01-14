@@ -247,6 +247,60 @@ class FlowycartClient
         return ['token' => $responseData->connectMerchant->token];
     }
 
+
+    /**
+     * Obtains all countries data stored in Flowycart platform
+     *
+     * @param null|array $extraReturnFields the extra fields the user wants to get from each country
+     *
+     * @return array the countries data (CountryType). By default each country will have the following fields:
+     * id, name, codeIso2, codeIso3
+     *
+     * @throws ErrorException
+     */
+    public function getCountries($extraReturnFields = []){
+        $defaultReturnFields = ['id', 'name', 'codeIso2', 'codeIso3'];
+        $returnFields = join(' ', array_merge($defaultReturnFields, $extraReturnFields));
+
+        $query = "
+            query countries{
+              countries{
+              {$returnFields}
+              }
+            }
+        ";
+
+        return $this->graphQLRequest($query)->countries;
+    }
+
+
+    /**
+     * @param string $countryId the Flowycart country id you want to get the zones from
+     *
+     * @param null|array $extraReturnFields the extra fields the user wants to get from each zone.
+
+     * @return array the zones data (CountryType). By default each zone will have the following fields:
+     * id, name, code
+     *
+     * @throws ErrorException
+     */
+    public function getZones($countryId, $extraReturnFields = []){
+        $defaultReturnFields = ['id', 'name', 'code'];
+        $returnFields = join(' ', array_merge($defaultReturnFields, $extraReturnFields));
+
+        $query = "
+            query zones(\$countryId: String!){
+              zones(countryId: \$countryId){
+                {$returnFields}
+              }
+            }
+        ";
+
+        $variables = compact('countryId');
+
+        return $this->graphQLRequest($query, $variables)->zones;
+    }
+
     /**
      * Sends a GraphQL request to Flowycart's API
      * @param string $query the GraphQL query string
